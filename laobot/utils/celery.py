@@ -1,5 +1,7 @@
 from celery import Celery
-from . import constants, RedditJobRunner, test_task
+
+from . import constants, test_task
+from .runner import RedditJobRunner
 from ..db import SubredditActions, SubredditFilters
 
 

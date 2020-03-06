@@ -25,10 +25,22 @@ CORPUS_DIRECTORY = os.environ.get('LAOBOT_CORPUS_DIR', r'Z:\Git\untitled1\data\l
 CELERY_REDIS_DB = os.environ.get('LAOBOT_REDIS_DB', '1')
 redis_host = os.environ.get('LAOBOT_REDIS_HOST', 'localhost')
 redis_port = os.environ.get('LAOBOT_REDIS_PORT', '6379')
-CELERY_REDIS_URL = f'redis://{redis_host}:{redis_port}/{CELERY_REDIS_DB}'
+redis_password = os.environ.get('LAOBOT_REDIS_PASSWORD', '')
+CELERY_REDIS_URL = f'redis://:{redis_password}@{redis_host}:{redis_port}/{CELERY_REDIS_DB}'
 CELERY_BROKER_URL = CELERY_REDIS_URL
 CELERY_RESULT_BACKEND = CELERY_REDIS_URL
 
-DB_URL = os.environ.get('LAOBOT_DB_URL', 'sqlite:///test.sqlite')
+# Specify a MySQL DB host, or a sqlite DB host for testing
+db_schema = 'laobot'
+charset = 'utf8mb4'
+DB_HOST = os.environ.get('LAOBOT_DB_HOST')
+DB_PORT = os.environ.get('LAOBOT_DB_PORT', 3306)
+DB_USER = os.environ.get('LAOBOT_DB_USER')
+DB_PASS = os.environ.get('LAOBOT_DB_PASSWORD')
+if not all((DB_HOST, DB_USER, DB_PASS)):
+    DB_URL = os.environ.get('LAOBOT_DB_URL', 'sqlite:///test.sqlite')
+else:
+    DB_URL = f'mysql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{db_schema}?charset={charset}'
+
 engine = db.create_engine(DB_URL)
 Session = sessionmaker(bind=engine)
