@@ -127,3 +127,9 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# PRAW ini
+praw.ini
+
+# Our test sqlite db
+test.sqlite

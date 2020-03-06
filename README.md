@@ -1,13 +1,16 @@
 # LAOBot
-last updated v0.0.1
+[Homepage][3] | [Github][2] | last updated v0.0.1
 
 ## Configuration
+This package uses [praw][1], a **praw.ini** file must be created containing Reddit OAuth credentials
+
 The following values may be set in the environment to configure LAOBot 
 
 * LAOBOT_TEST (default=0/False)
 * LAOBOT_REDIS_DB (default=1)
 * LAOBOT_REDIS_HOST (default=localhost)
 * LAOBOT_REDIS_PORT (default=6379)
+* LAOBOT_REDIS_PASSWORD (default="")
 * LAOBOT_CORPUS_DIR - directory containing the television script text files from which the bot generates and detects content
 * LAOBOT_DB_URL (default=sqlite:///test.sqlite)
 * LAOBOT_ACTION_INTERVAL
@@ -24,3 +27,7 @@ Reddit strongly encourages informative user-agent strings.  The following option
   * celery -A laobot.utils.celery worker --loglevel=debug -P solo
 * Start LAOBot server (blocking command)
   * laobot start
+  
+[1]: https://praw.readthedocs.io/en/latest/
+[2]: https://github.com/wnormandin/laobot
+[3]: https://pokeybots.com/laobot.html
