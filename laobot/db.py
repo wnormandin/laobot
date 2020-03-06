@@ -42,7 +42,7 @@ class Event(Base):
 
     id = Column(Integer, primary_key=True)
     job_id = Column(Integer, ForeignKey('jobs.id'))
-    message = Column(String)
+    message = Column(String(192))
 
     job = relationship('Job', backref='events')
 
@@ -51,21 +51,21 @@ class Config(Base):
     __tablename__ = 'configurations'
 
     id = Column(Integer, primary_key=True)
-    key = Column(String, unique=True)
-    value = Column(String)
+    key = Column(String(100), unique=True)
+    value = Column(String(192))
 
 
 class Subreddit(Base):
     __tablename__ = 'subreddits'
-    name = Column(String, primary_key=True)
+    name = Column(String(100), primary_key=True)
 
 
 class Job(Base):
     __tablename__ = 'jobs'
 
     id = Column(Integer, primary_key=True)
-    uuid = Column(String, unique=True, default=get_uuid)
-    subreddit = Column(String, ForeignKey('subreddits.name'))
+    uuid = Column(String(100), unique=True, default=get_uuid)
+    subreddit = Column(String(100), ForeignKey('subreddits.name'))
 
     action = Column(Enum(SubredditActions))
     filter = Column(Enum(SubredditFilters))

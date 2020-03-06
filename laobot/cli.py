@@ -58,5 +58,17 @@ def start(poll):
         raise click.Abort()
 
 
+@cli.group()
+def admin():
+    """ Administrative commands for the LAOBot project """
+
+
+@admin.command()
+def create_db():
+    """ Create DB tables """
+    from .db import Base
+    Base.metadata.create_all()
+
+
 if __name__ == '__main__':
     cli(prog_name='laobot')
