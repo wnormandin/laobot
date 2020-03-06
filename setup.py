@@ -7,7 +7,7 @@ setup(
     version=__version__,
     install_requires=[
         'praw', 'bump2version', 'celery', 'redis', 'sqlalchemy', 'click', 'click-log',
-        'python-pidfile'
+        'python-pidfile', 'python-dotenv', 'pymysql'
         ],
     author='Bill Normandin',
     author_email='bill@pokeybill.us',
