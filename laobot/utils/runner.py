@@ -1,17 +1,21 @@
+import logging
+
+from ..utils import subreddit_top_n
 from ..db import (
-    create_job,
-    set_job_status,
-    get_or_create_subreddit,
+    Functions,
     SubredditActions,
     JobStatus,
 )
+
 from ..quote_generator import find_substring
+logger = logging.getLogger(__name__)
 
 
 class RedditJobRunner:
-    def __init__(self, subreddit_name, action, subreddit_filter='hot'):
-        self.subreddit = get_or_create_subreddit(subreddit_name)
-        self.job = create_job(self.subreddit.name, action, subreddit_filter=subreddit_filter)
+    def __init__(self, subreddit_name, action, subreddit_filter='hot', scrape_count=None):
+        self.subreddit = Functions.get_or_create_subreddit(subreddit_name)
+        self.job = Functions.create_job(self.subreddit.name, action, subreddit_filter=subreddit_filter,
+                                        scrape_count=scrape_count)
         self.event(f'Job {self.job.uuid} started')
         self.job_started()
 
@@ -23,9 +27,9 @@ class RedditJobRunner:
 
     def get_submissions(self):
         submissions = subreddit_top_n(
-            self.job.subreddit.name,
+            self.job.subreddit,
             self.job.filter,
-            self.job.scrape_count or 1
+            self.job.scrape_count
         )
         self.event(f'Fetched submissions from subreddit {self.subreddit.name}')
         return submissions
@@ -43,25 +47,29 @@ class RedditJobRunner:
             self.job_complete()
 
     def process_submission(self, submission):
-        for comment in submission.comments:
+        for comment in submission['comments']:
             if len(comment.body) < 50:
                 continue
 
-            path, text = find_substring(comment.body[:50])
+            path, text = find_substring(comment['body'][:50])
             if path:
-                self.event(f'Found comment {comment.name} in {path}: {text}')
+                self.event(f'Found comment {comment["name"]} in {path}: {text}')
 
     def do_comment(self):
         pass
 
     def event(self, message):
-        return create_event(message=message, job=self.job)
+        return Functions.create_event(message=message, job=self.job)
 
     def job_complete(self):
-        set_job_status(self.job, JobStatus.complete)
+        Functions.set_job_status(self.job, JobStatus.complete)
 
     def job_started(self):
-        set_job_status(self.job, JobStatus.started)
+        Functions.set_job_status(self.job, JobStatus.in_progress)
 
     def job_error(self):
-        set_job_status(self.job, JobStatus.error)
+        Functions.set_job_status(self.job, JobStatus.error)
+
+    def check_item(self, item):
+        if not Functions.already_processed(item.fullname):
+            Functions.mark_item_processed(item_name=item.fullname, job=self.job)

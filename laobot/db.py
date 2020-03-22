@@ -4,7 +4,7 @@ from sqlalchemy import Column, Integer, String, ForeignKey, Enum
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm.session import object_session
 from sqlalchemy.ext.declarative import declarative_base
-from .utils.constants import Session, engine
+from .utils.constants import Session, engine, COMMENT_SAMPLE_SIZE
 
 
 Base = declarative_base(bind=engine)
@@ -71,45 +71,72 @@ class Job(Base):
     filter = Column(Enum(SubredditFilters))
     status = Column(Enum(JobStatus), default=JobStatus.new)
 
-    scrape_count = Column(Integer, nullable=True)
+    scrape_count = Column(Integer, nullable=True, default=COMMENT_SAMPLE_SIZE)
 
 
-def create_event(message, job=None):
-    if job is not None:
-        session = object_session(job)
-    else:
-        session = None
+class ProcessedItem(Base):
+    __tablename__ = 'processed_items'
+    name = Column(String(100, primary_key=True))
+    job_id = Column(Integer, ForeignKey('jobs.id'))
 
-    if session is None:
+    job = relationship(Job)
+
+
+class Functions:
+    @staticmethod
+    def already_processed(item_name) -> bool:
         session = get_session()
-    event = Event(message=message, job=job)
-    session.add(event)
-    session.commit()
-    return event.id
+        item = session.query(ProcessedItem).filter_by(name=item_name).first()
+        return bool(item)
 
-
-def create_job(subreddit, action, subreddit_filter=SubredditFilters.hot):
-    session = get_session()
-    job = Job(subreddit=subreddit, filter=subreddit_filter, action=action)
-    session.add(job)
-    session.commit()
-    return job
-
-
-def set_job_status(job, status=JobStatus.new):
-    session = object_session(job)
-    if session is None:
-        session = get_session()
-    job.status = status
-    session.add(job)
-    session.commit()
-
-
-def get_or_create_subreddit(subreddit_name):
-    session = get_session()
-    subreddit = session.query(Subreddit).filter_by(name=subreddit_name).first()
-    if subreddit is None:
-        subreddit = Subreddit(name=subreddit_name)
-        session.add(subreddit)
+    @staticmethod
+    def mark_item_processed(item_name, job) -> bool:
+        session = object_session(job) or get_session()
+        item = ProcessedItem(name=item_name)
+        session.add(item)
         session.commit()
-    return subreddit
+        return True
+
+    @staticmethod
+    def create_event(message, job=None) -> int:
+        if job is not None:
+            session = object_session(job)
+        else:
+            session = None
+
+        if session is None:
+            session = get_session()
+
+        event = Event(message=message, job=job)
+        session.add(event)
+        session.commit()
+
+        return event.id
+
+    @staticmethod
+    def create_job(subreddit, action, subreddit_filter=SubredditFilters.hot, scrape_count=None) -> Job:
+        session = get_session()
+        job = Job(subreddit=subreddit, filter=subreddit_filter, action=action,
+                  scrape_count=scrape_count)
+        session.add(job)
+        session.commit()
+        return job
+
+    @staticmethod
+    def set_job_status(job, status=JobStatus.new) -> None:
+        session = object_session(job)
+        if session is None:
+            session = get_session()
+        job.status = status
+        session.add(job)
+        session.commit()
+
+    @staticmethod
+    def get_or_create_subreddit(subreddit_name) -> Subreddit:
+        session = get_session()
+        subreddit = session.query(Subreddit).filter_by(name=subreddit_name).first()
+        if subreddit is None:
+            subreddit = Subreddit(name=subreddit_name)
+            session.add(subreddit)
+            session.commit()
+        return subreddit

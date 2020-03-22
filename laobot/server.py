@@ -20,18 +20,17 @@ class LAOMessageHandler(socketserver.StreamRequestHandler):
 
     def handle(self):
         self.current_command = self.rfile.readline().decode().strip()
-        response = ''
         if self.current_command:
+            logger.info(f'Received command: {self.current_command}')
             if self.current_command.lower() == 'status':
                 logger.debug('Status: OK')
                 response = 'OK'
             elif self.current_command.lower() == 'shutdown':
-                logger.warning('Received shutdown command')
+                logger.warning('Shutting down')
                 global SHUTTING_DOWN
                 SHUTTING_DOWN = True
                 response = 'Shutting down'
             else:
-                logger.info(f'Received command: {self.current_command}')
                 response = f'Received {len(self.current_command)} characters'
         else:
             response = 'Must provide a command'
@@ -59,13 +58,14 @@ class LAOBotServer(socketserver.TCPServer):
         if time.time() - timers[id(self)] > constants.ACTION_WAIT_TIME:
             logger.debug('Running default task')
             # Do default work
-            run_job.delay('television')
+            for subreddit in constants.DEFAULT_SUBREDDITS:
+                run_job.delay(subreddit)
             timers[id(self)] = time.time()
 
 
-def send_server_message(message):
+def send_server_message(message, host=None, port=None):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-        sock.connect((constants.SERVER_HOST, constants.SERVER_PORT))
+        sock.connect((host or constants.SERVER_HOST, port or constants.SERVER_PORT))
         sock.sendall(bytes(f'{message}\n', 'utf-8'))
         return str(sock.recv(1024), 'utf-8')
 

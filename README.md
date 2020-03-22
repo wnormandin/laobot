@@ -6,17 +6,32 @@ This package uses [praw][1], a **praw.ini** file must be created containing Redd
 
 The following values may be set in the environment to configure LAOBot 
 
-* LAOBOT_TEST (default=0/False)
-* LAOBOT_REDIS_DB (default=1)
-* LAOBOT_REDIS_HOST (default=localhost)
-* LAOBOT_REDIS_PORT (default=6379)
-* LAOBOT_REDIS_PASSWORD (default="")
-* LAOBOT_CORPUS_DIR - directory containing the television script text files from which the bot generates and detects content
-* LAOBOT_DB_URL (default=sqlite:///test.sqlite)
-* LAOBOT_ACTION_INTERVAL
-* LAOBOT_SERVER_HOST - host used by the LAOBot server (default=localhost)
-* LAOBOT_SERVER_PORT - sets the local port over which the LAOBot server will listen
+##### Bot Behavior
+* LAOBOT_TEST (default = **0**)
+* LAOBOT_CORPUS_DIR - directory containing the television script text files from which markov chains and substring searches will operate
+* LAOBOT_ACTION_INTERVAL (default = **30**s)
+* LAOBOT_COMMENT_SAMPLE_SIZE (default = **50** comments)
+* LAOBOT_COMMENT_MIN_UPVOTES (default = **5** upvotes)
+* LAOBOT_DEFAULT_SUBREDDITS (default = **television,movies**)
 
+##### Celery Broker Configuration
+* LAOBOT_REDIS_DB (default = **1**)
+* LAOBOT_REDIS_HOST (default = **localhost**)
+* LAOBOT_REDIS_PORT (default = **6379**)
+* LAOBOT_REDIS_PASSWORD (default = **""**)
+
+##### Database Configuraton
+* LAOBOT_DB_URL (replaces the other DB options, default = **sqlite:///test.sqlite** when other options missing)
+* LAOBOT_DB_HOST
+* LAOBOT_DB_PORT
+* LAOBOT_DB_USER
+* LAOBOT_DB_PASSWORD
+
+##### LAOBot Server
+* LAOBOT_SERVER_HOST
+* LAOBOT_SERVER_PORT
+
+##### User-Agent 
 Reddit strongly encourages informative user-agent strings.  The following options will drive the user-agent string used by LAOBot
 * LAOBOT_AUTHOR (provide this as a reddit user, e.g. **"u/pokeybill"**)
 * LAOBOT_HOMEPAGE
