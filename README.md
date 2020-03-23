@@ -10,9 +10,13 @@ The following values may be set in the environment to configure LAOBot
 * LAOBOT_TEST (default = **0**)
 * LAOBOT_CORPUS_DIR - directory containing the television script text files from which markov chains and substring searches will operate
 * LAOBOT_ACTION_INTERVAL (default = **30**s)
+* LAOBOT_SUBMISSION_SAMPLE_SIZE
 * LAOBOT_COMMENT_SAMPLE_SIZE (default = **50** comments)
 * LAOBOT_COMMENT_MIN_UPVOTES (default = **5** upvotes)
 * LAOBOT_DEFAULT_SUBREDDITS (default = **television,movies**)
+* LAOBOT_MAX_COMMENTS_PER_RUNNER
+* LAOBOT_COMMENT_TEMPLATE_DIR
+* LAOBOT_COMMENT_TEMPLATE_FILE
 
 ##### Celery Broker Configuration
 * LAOBOT_REDIS_DB (default = **1**)

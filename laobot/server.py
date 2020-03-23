@@ -46,7 +46,7 @@ class LAOBotServer(socketserver.TCPServer):
             super().serve_forever(poll_interval=poll_interval)
 
     def service_actions(self):
-        from laobot.utils.celery import run_test, run_job
+        from laobot.utils.celery import run_job
 
         if SHUTTING_DOWN:
             self.shutdown()

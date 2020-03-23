@@ -1,6 +1,7 @@
 import uuid
 import enum
-from sqlalchemy import Column, Integer, String, ForeignKey, Enum
+from datetime import datetime
+from sqlalchemy import Column, Integer, String, ForeignKey, Enum, DateTime
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm.session import object_session
 from sqlalchemy.ext.declarative import declarative_base
@@ -37,7 +38,14 @@ class JobStatus(enum.Enum):
     complete = 'complete'
 
 
-class Event(Base):
+class TimestampedRecord(Base):
+    __abstract__ = True
+
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, onupdate=datetime.utcnow)
+
+
+class Event(TimestampedRecord):
     __tablename__ = 'events'
 
     id = Column(Integer, primary_key=True)
@@ -60,7 +68,7 @@ class Subreddit(Base):
     name = Column(String(100), primary_key=True)
 
 
-class Job(Base):
+class Job(TimestampedRecord):
     __tablename__ = 'jobs'
 
     id = Column(Integer, primary_key=True)
@@ -76,10 +84,20 @@ class Job(Base):
 
 class ProcessedItem(Base):
     __tablename__ = 'processed_items'
-    name = Column(String(100, primary_key=True))
+
+    name = Column(String(100), primary_key=True)
     job_id = Column(Integer, ForeignKey('jobs.id'))
 
     job = relationship(Job)
+
+
+class Comment(TimestampedRecord):
+    __tablename__ = 'comments'
+
+    id = Column(Integer, primary_key=True)
+    uuid = Column(String(100), unique=True, default=get_uuid)
+    parent_id = Column(String(100), ForeignKey('processed_items.name'))
+    permalink = Column(String(196))
 
 
 class Functions:
@@ -90,24 +108,25 @@ class Functions:
         return bool(item)
 
     @staticmethod
-    def mark_item_processed(item_name, job) -> bool:
-        session = object_session(job) or get_session()
-        item = ProcessedItem(name=item_name)
+    def mark_item_processed(item_name, job_id) -> bool:
+        session = get_session()
+        item = ProcessedItem(name=item_name, job_id=job_id)
         session.add(item)
         session.commit()
         return True
 
     @staticmethod
-    def create_event(message, job=None) -> int:
-        if job is not None:
-            session = object_session(job)
-        else:
-            session = None
+    def track_comment(comment, parent_id):
+        session = get_session()
+        item = Comment(parent_id=parent_id, permalink=f'https://reddit.com{comment.permalink}')
+        session.add(item)
+        session.commit()
+        return item.permalink
 
-        if session is None:
-            session = get_session()
-
-        event = Event(message=message, job=job)
+    @staticmethod
+    def create_event(message, job_id=None) -> int:
+        session = get_session()
+        event = Event(message=message, job_id=job_id)
         session.add(event)
         session.commit()
 
@@ -120,13 +139,12 @@ class Functions:
                   scrape_count=scrape_count)
         session.add(job)
         session.commit()
-        return job
+        return job.id
 
     @staticmethod
-    def set_job_status(job, status=JobStatus.new) -> None:
-        session = object_session(job)
-        if session is None:
-            session = get_session()
+    def set_job_status(job_id, status=JobStatus.new) -> None:
+        session = get_session()
+        job = session.query(Job).get(job_id)
         job.status = status
         session.add(job)
         session.commit()

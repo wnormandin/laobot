@@ -4,5 +4,5 @@ import pymysql
 from dotenv import load_dotenv
 
 pymysql.install_as_MySQLdb()
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 load_dotenv()
